@@ -1,23 +1,66 @@
-# Python Hello
+# Coffee Shop Inventory Agent
 
-The most basic boilerplate to start a Python project at 4Geeks is to start your very first Python project from scratch.
+Natural-language inventory management for a coffee shop supply store. A FastAPI REST API stores products in `products.csv`, and a plain-Python AI agent talks to an LLM (Groq) and calls the API as tools.
 
-## What to do next?
+**Important:** Do not use agent frameworks (LangChain, LlamaIndex, AutoGen, etc.). The agent loop is implemented manually in `agent.py`.
 
-Open the `main.py` file and start writing your code.
+## Setup
 
-Execute your code by typing the following command on your terminal:
+1. Create a virtual environment (recommended) and install dependencies:
 
 ```bash
-$ python main.py
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-You can create and include as many python files (a.k.a. modules) as you want using the import statements.
+2. Open `.env` at the project root and set your Groq API key:
 
-## Requirements
+```
+GROQ_API_KEY=your_key_here
+GROQ_MODEL=llama-3.3-70b-versatile
+API_BASE_URL=http://127.0.0.1:8000
+```
 
-Make sure you have Python installed in your computer. We strongly recommend [installing Python through Pyenv ](https://4geeks.com/how-to/what-is-pyenv-and-how-to-install-pyenv) to avoid version conflicts in the future.
+`.env` is gitignored — never commit your key.
 
-### Contributors
+## Running the system
 
-This template was built as part of the [4Geeks Python Resources](https://4geeks.com/technology/python) for learning at [4Geeks.com](https://4geeks.com) by [Alejandro Sanchez](https://twitter.com/alesanchezr) and [many other contributors](https://github.com/4GeeksAcademy/python-hello/graphs/contributors).
+You need **two terminals**. Start the API first.
+
+### Terminal 1 — API
+
+```bash
+uvicorn api.app:app --reload
+```
+
+The API listens on `http://127.0.0.1:8000`.
+
+### Terminal 2 — Agent
+
+```bash
+python agent.py
+```
+
+Type natural language (e.g. "We just received 30 liters of oat milk.") and press Enter. Type `quit` or `exit` to stop.
+
+### Stopping
+
+Press `Ctrl + C` in each terminal. Stop the **agent first** so conversation logs finish writing cleanly, then stop the API.
+
+## API endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/inventory` | List all products |
+| POST | `/inventory` | Add a product (`name`, `quantity`, `unit`) |
+| PATCH | `/inventory/{product_id}` | Adjust stock by `delta` (+ delivery, − sale) |
+| GET | `/inventory/alerts` | Products below threshold (default 10) |
+
+## Files
+
+- `api/app.py` — FastAPI inventory service
+- `products.csv` — Persistent product catalog (source of truth for the API)
+- `inventory.md` — Same catalog as a readable markdown table (open Preview in the editor)
+- `agent.py` — Manual LLM agent + CLI
+- `conversation_log.csv` — Append-only session log (`actor`, `message`, `tool_call`, `timestamp`)
